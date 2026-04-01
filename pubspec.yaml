@@ -1,0 +1,51 @@
+name: personal_finance
+description: Personal Finance Manager App
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  provider: ^6.1.1
+  dio: ^5.4.0
+  shared_preferences: ^2.2.2
+  flutter_secure_storage: ^9.0.0
+  local_auth: ^2.1.7
+  image_picker: ^1.0.7
+  fl_chart: ^0.66.2
+  intl: ^0.20.2
+  cached_network_image: ^3.3.1
+  flutter_colorpicker: ^1.0.3
+  permission_handler: ^11.3.0
+  open_file: ^3.3.2
+  path_provider: ^2.1.2
+  cupertino_icons: ^1.0.6
+  google_fonts: ^6.2.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_launcher_icons: ^0.13.1
+  flutter_lints: ^3.0.0
+
+flutter_icons:
+  android: true
+  ios: true
+  image_path: "assets/images/wallet.png"
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/images/
+    - assets/fonts/
+  fonts:
+    - family: NotoSansLao
+      fonts:
+        - asset: assets/fonts/NotoSansLao-Regular.ttf
+        - asset: assets/fonts/NotoSansLao-Bold.ttf
+          weight: 700

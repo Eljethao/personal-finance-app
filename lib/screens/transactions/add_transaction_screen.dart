@@ -28,6 +28,18 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   String? _slipImagePath;
   bool _isLoading = false;
 
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(() {
+      if (!mounted) return;
+      final cp = context.read<CategoryProvider>();
+      if (cp.categories.isEmpty) cp.fetchCategories();
+      final wp = context.read<WalletProvider>();
+      if (wp.wallets.isEmpty) wp.fetchWallets();
+    });
+  }
+
   Future<void> _pickDate() async {
     final date = await showDatePicker(
       context: context,
@@ -115,15 +127,13 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     }
   }
 
-  List<CategoryModel> get _categoriesForType {
-    final cats = context.read<CategoryProvider>().categories;
-    return cats.where((c) => c.type == _type).toList();
-  }
-
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     final wallets = context.watch<WalletProvider>().wallets;
+    final allCategories = context.watch<CategoryProvider>().categories;
+    final categoriesForType =
+        allCategories.where((c) => c.type == _type).toList();
 
     return Scaffold(
       appBar: AppBar(title: Text(l.t('addTransaction'))),
@@ -179,7 +189,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                 decoration: InputDecoration(
                     labelText: l.t('category'),
                     prefixIcon: const Icon(Icons.category_outlined)),
-                items: _categoriesForType
+                items: categoriesForType
                     .map((c) =>
                         DropdownMenuItem(value: c, child: Text(c.name)))
                     .toList(),

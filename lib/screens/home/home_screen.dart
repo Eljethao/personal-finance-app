@@ -312,17 +312,43 @@ class _DashboardPage extends StatelessWidget {
 // ─────────────────────────────────────────────
 //  Balance Card
 // ─────────────────────────────────────────────
-class _BalanceCard extends StatelessWidget {
+class _BalanceCard extends StatefulWidget {
   final Map summary;
   final AppLocalizations l;
   const _BalanceCard({required this.summary, required this.l});
 
   @override
+  State<_BalanceCard> createState() => _BalanceCardState();
+}
+
+class _BalanceCardState extends State<_BalanceCard> {
+  /// null = net balance, 'income' / 'expense' / 'investment' = filtered view
+  String? _selectedType;
+
+  @override
   Widget build(BuildContext context) {
-    final netBalance = (summary['netBalance'] ?? 0).toDouble();
-    final income = (summary['income'] ?? 0).toDouble();
-    final expense = (summary['expense'] ?? 0).toDouble();
-    final invest = (summary['investment'] ?? 0).toDouble();
+    final netBalance = (widget.summary['netBalance'] ?? 0).toDouble();
+    final income = (widget.summary['income'] ?? 0).toDouble();
+    final expense = (widget.summary['expense'] ?? 0).toDouble();
+    final invest = (widget.summary['investment'] ?? 0).toDouble();
+    final l = widget.l;
+
+    final double displayAmount = switch (_selectedType) {
+      'income'     => income,
+      'expense'    => expense,
+      'investment' => invest,
+      _            => netBalance,
+    };
+
+    final String displayLabel = switch (_selectedType) {
+      'income'     => l.t('income'),
+      'expense'    => l.t('expense'),
+      'investment' => l.t('investment'),
+      _            => l.t('netBalance'),
+    };
+
+    void toggleType(String type) =>
+        setState(() => _selectedType = _selectedType == type ? null : type);
 
     return Container(
       padding: const EdgeInsets.all(24),
@@ -338,12 +364,16 @@ class _BalanceCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                l.t('netBalance'),
-                style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.75),
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500),
+              AnimatedSwitcher(
+                duration: const Duration(milliseconds: 200),
+                child: Text(
+                  displayLabel,
+                  key: ValueKey(displayLabel),
+                  style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.75),
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500),
+                ),
               ),
               Container(
                 padding:
@@ -363,18 +393,31 @@ class _BalanceCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 10),
-          // Balance amount
-          Text(
-            Formatters.currency(netBalance),
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 34,
-              fontWeight: FontWeight.w800,
-              letterSpacing: -0.5,
+          // Balance amount — animates when type changes
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 250),
+            transitionBuilder: (child, animation) => FadeTransition(
+              opacity: animation,
+              child: SlideTransition(
+                position: Tween(
+                        begin: const Offset(0, 0.15), end: Offset.zero)
+                    .animate(animation),
+                child: child,
+              ),
+            ),
+            child: Text(
+              Formatters.currency(displayAmount),
+              key: ValueKey(_selectedType),
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 34,
+                fontWeight: FontWeight.w800,
+                letterSpacing: -0.5,
+              ),
             ),
           ),
           const SizedBox(height: 24),
-          // Glassmorphism stats row
+          // Glassmorphism stats row — tap to filter
           Container(
             padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
             decoration: BoxDecoration(
@@ -389,6 +432,8 @@ class _BalanceCard extends StatelessWidget {
                   amount: income,
                   icon: Icons.arrow_circle_down_rounded,
                   color: AppTheme.income,
+                  isSelected: _selectedType == 'income',
+                  onTap: () => toggleType('income'),
                 ),
                 Container(
                     width: 1,
@@ -399,6 +444,8 @@ class _BalanceCard extends StatelessWidget {
                   amount: expense,
                   icon: Icons.arrow_circle_up_rounded,
                   color: AppTheme.expense,
+                  isSelected: _selectedType == 'expense',
+                  onTap: () => toggleType('expense'),
                 ),
                 Container(
                     width: 1,
@@ -409,6 +456,8 @@ class _BalanceCard extends StatelessWidget {
                   amount: invest,
                   icon: Icons.show_chart_rounded,
                   color: AppTheme.investment,
+                  isSelected: _selectedType == 'investment',
+                  onTap: () => toggleType('investment'),
                 ),
               ],
             ),
@@ -427,41 +476,66 @@ class _MiniStat extends StatelessWidget {
   final double amount;
   final IconData icon;
   final Color color;
-  const _MiniStat(
-      {required this.label,
-      required this.amount,
-      required this.icon,
-      required this.color});
+  final bool isSelected;
+  final VoidCallback onTap;
+  const _MiniStat({
+    required this.label,
+    required this.amount,
+    required this.icon,
+    required this.color,
+    required this.isSelected,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Expanded(
-      child: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(5),
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.22),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Icon(icon, color: Colors.white, size: 13),
+      child: GestureDetector(
+        onTap: onTap,
+        behavior: HitTestBehavior.opaque,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
+          decoration: BoxDecoration(
+            color: isSelected
+                ? Colors.white.withValues(alpha: 0.15)
+                : Colors.transparent,
+            borderRadius: BorderRadius.circular(10),
+            border: isSelected
+                ? Border.all(color: Colors.white.withValues(alpha: 0.5))
+                : null,
           ),
-          const SizedBox(height: 5),
-          Text(label,
-              style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.75),
-                  fontSize: 10,
-                  fontWeight: FontWeight.w500)),
-          const SizedBox(height: 2),
-          Text(
-            Formatters.currency(amount),
-            style: const TextStyle(
-                color: Colors.white, fontSize: 11, fontWeight: FontWeight.w700),
-            overflow: TextOverflow.ellipsis,
-            maxLines: 1,
-            textAlign: TextAlign.center,
+          child: Column(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(5),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: isSelected ? 0.4 : 0.22),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(icon, color: Colors.white, size: 13),
+              ),
+              const SizedBox(height: 5),
+              Text(label,
+                  style: TextStyle(
+                      color: Colors.white.withValues(
+                          alpha: isSelected ? 1.0 : 0.75),
+                      fontSize: 10,
+                      fontWeight: FontWeight.w500)),
+              const SizedBox(height: 2),
+              Text(
+                Formatters.currency(amount),
+                style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700),
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
+                textAlign: TextAlign.center,
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

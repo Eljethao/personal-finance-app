@@ -56,21 +56,24 @@ class AuthProvider extends ChangeNotifier {
     _isLoading = true;
     notifyListeners();
     try {
-      debugPrint("url: ${AppConstants.baseUrl}/auth/register");
+      debugPrint('[Auth] Register attempt: phone=$phone, name=$name');
       final res = await _api.post('/auth/register', data: {
         'name': name,
         'phone': phone,
         'pin': pin,
       });
+      debugPrint('[Auth] Register response: ${res.statusCode}');
       final data = res.data['data'] as Map<String, dynamic>;
-      debugPrint('Registration response:---> $data');
       await _api.saveToken(data['token'] as String);
       _user = UserModel.fromJson(data['user'] as Map<String, dynamic>);
       _isAuthenticated = true;
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(AppConstants.userKey, jsonEncode(_user!.toJson()));
+      debugPrint('[Auth] Register successful: user=${_user?.name}');
       return true;
-    } catch (_) {
+    } catch (e, stack) {
+      debugPrint('[Auth] Register failed: $e');
+      debugPrint('[Auth] Stack trace: $stack');
       return false;
     } finally {
       _isLoading = false;
@@ -82,16 +85,21 @@ class AuthProvider extends ChangeNotifier {
     _isLoading = true;
     notifyListeners();
     try {
+      debugPrint('[Auth] Login attempt: phone=$phone');
       final res = await _api
           .post('/auth/login', data: {'phone': phone, 'pin': pin});
+      debugPrint('[Auth] Login response: ${res.statusCode}');
       final data = res.data['data'] as Map<String, dynamic>;
       await _api.saveToken(data['token'] as String);
       _user = UserModel.fromJson(data['user'] as Map<String, dynamic>);
       _isAuthenticated = true;
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(AppConstants.userKey, jsonEncode(_user!.toJson()));
+      debugPrint('[Auth] Login successful: user=${_user?.name}');
       return true;
-    } catch (_) {
+    } catch (e, stack) {
+      debugPrint('[Auth] Login failed: $e');
+      debugPrint('[Auth] Stack trace: $stack');
       return false;
     } finally {
       _isLoading = false;

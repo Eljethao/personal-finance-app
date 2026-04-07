@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../l10n/app_localizations.dart';
 import '../../utils/app_theme.dart';
 import 'login_pin_screen.dart';
@@ -114,10 +115,15 @@ class _LoginScreenState extends State<LoginScreen> {
                             controller: _phoneCtrl,
                             decoration: InputDecoration(
                               labelText: l.t('phoneNumber'),
+                              hintText: '20XXXXXXXX',
                               prefixIcon:
                                   const Icon(Icons.phone_outlined),
                             ),
                             keyboardType: TextInputType.phone,
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly,
+                              LengthLimitingTextInputFormatter(10),
+                            ],
                             autofocus: true,
                             textInputAction: TextInputAction.done,
                             onFieldSubmitted: (_) => _continue(),

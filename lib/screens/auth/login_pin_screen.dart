@@ -143,16 +143,36 @@ class _LoginPinScreenState extends State<LoginPinScreen> {
             height: 72,
             child: k.isEmpty
                 ? const SizedBox()
-                : TextButton(
-                    onPressed: k == '⌫' ? _onBackspace : () => _onKeyPress(k),
-                    child: Text(
-                      k,
-                      style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 24,
-                          fontWeight: FontWeight.w600),
+                : Padding(
+                  padding: const EdgeInsets.all(4.0),
+                  child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: k == '⌫' ? _onBackspace : () => _onKeyPress(k),
+                        borderRadius: BorderRadius.circular(12),
+                        splashColor: Colors.white.withValues(alpha: 0.3),
+                        highlightColor: Colors.white.withValues(alpha: 0.15),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            border: Border.all(
+                              color: Colors.white.withValues(alpha: 0.3),
+                              width: 1.2,
+                            ),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Center(
+                            child: Text(
+                              k,
+                              style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.w600),
+                            ),
+                          ),
+                        ),
+                      ),
                     ),
-                  ),
+                ),
           )).toList(),
         )).toList(),
       ),

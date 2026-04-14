@@ -9,4 +9,5 @@ class AppConstants {
   static const String langKey = 'preferred_language';
   static const String pinKey = 'user_pin';
   static const String biometricKey = 'biometric_enabled';
+  static const String appVersion = '1.0.1';
 }

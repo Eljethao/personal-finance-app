@@ -9,6 +9,7 @@ import '../../providers/transaction_provider.dart';
 import '../../providers/wallet_provider.dart';
 import '../../utils/app_theme.dart';
 import '../../utils/formatters.dart';
+import '../../utils/icon_map.dart';
 
 class AddTransactionScreen extends StatefulWidget {
   const AddTransactionScreen({super.key});
@@ -61,25 +62,31 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     final l = AppLocalizations.of(context);
     showModalBottomSheet(
       context: context,
-      builder: (_) => Wrap(
-        children: [
-          ListTile(
-            leading: const Icon(Icons.camera_alt),
-            title: Text(l.t('camera')),
-            onTap: () {
-              Navigator.pop(context);
-              _pickImage(ImageSource.camera);
-            },
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.camera_alt),
+                title: Text(l.t('camera')),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _pickImage(ImageSource.camera);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_library),
+                title: Text(l.t('gallery')),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _pickImage(ImageSource.gallery);
+                },
+              ),
+            ],
           ),
-          ListTile(
-            leading: const Icon(Icons.photo_library),
-            title: Text(l.t('gallery')),
-            onTap: () {
-              Navigator.pop(context);
-              _pickImage(ImageSource.gallery);
-            },
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -187,12 +194,28 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
               DropdownButtonFormField<CategoryModel>(
                 value: _selectedCategory,
                 decoration: InputDecoration(
-                    labelText: l.t('category'),
-                    prefixIcon: const Icon(Icons.category_outlined)),
-                items: categoriesForType
-                    .map((c) =>
-                        DropdownMenuItem(value: c, child: Text(c.name)))
-                    .toList(),
+                  labelText: l.t('category'),
+                  prefixIcon: _selectedCategory != null
+                      ? Icon(iconFromName(_selectedCategory!.icon),
+                          color: AppTheme.primary)
+                      : const Icon(Icons.category_outlined),
+                ),
+                items: categoriesForType.map((c) {
+                  final color = c.color.isNotEmpty
+                      ? Color(int.parse(
+                          c.color.replaceFirst('#', '0xFF')))
+                      : AppTheme.primary;
+                  return DropdownMenuItem(
+                    value: c,
+                    child: Row(
+                      children: [
+                        Icon(iconFromName(c.icon), color: color, size: 20),
+                        const SizedBox(width: 10),
+                        Text(c.name),
+                      ],
+                    ),
+                  );
+                }).toList(),
                 onChanged: (v) => setState(() => _selectedCategory = v),
                 validator: (v) =>
                     v == null ? l.t('selectCategory') : null,

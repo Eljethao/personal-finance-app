@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../l10n/app_localizations.dart';
 import '../../utils/app_theme.dart';
+import '../../utils/constants.dart';
 import 'login_pin_screen.dart';
 import 'register_screen.dart';
 
@@ -150,6 +151,16 @@ class _LoginScreenState extends State<LoginScreen> {
                             MaterialPageRoute(
                                 builder: (_) => const RegisterScreen())),
                         child: Text(l.t('dontHaveAccount')),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    Center(
+                      child: Text(
+                        'v${AppConstants.appVersion}',
+                        style: TextStyle(
+                          color: AppTheme.textSecondary.withValues(alpha: 0.6),
+                          fontSize: 11,
+                        ),
                       ),
                     ),
                   ],

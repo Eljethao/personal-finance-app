@@ -137,8 +137,17 @@ class TransactionDetailScreen extends StatelessWidget {
     if (confirmed == true && context.mounted) {
       final provider = context.read<TransactionProvider>();
       final navigator = Navigator.of(context);
+      final messenger = ScaffoldMessenger.of(context);
       await provider.deleteTransaction(transaction.id);
       navigator.pop();
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(l.t('deleteSuccess')),
+          backgroundColor: AppTheme.income,
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 2),
+        ),
+      );
     }
   }
 }

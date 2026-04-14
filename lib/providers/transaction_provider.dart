@@ -21,9 +21,12 @@ class TransactionProvider extends ChangeNotifier {
     DateTime? endDate,
     int page = 1,
     int limit = 20,
+    bool append = false,
   }) async {
-    _isLoading = true;
-    notifyListeners();
+    if (!append) {
+      _isLoading = true;
+      notifyListeners();
+    }
     try {
       final params = <String, dynamic>{'page': page, 'limit': limit};
       if (type != null) params['type'] = type;
@@ -34,9 +37,14 @@ class TransactionProvider extends ChangeNotifier {
 
       final res = await _api.get('/transactions', params: params);
       final data = res.data['data'] as Map<String, dynamic>;
-      _transactions = (data['transactions'] as List)
+      final fetched = (data['transactions'] as List)
           .map((t) => TransactionModel.fromJson(t as Map<String, dynamic>))
           .toList();
+      if (append) {
+        _transactions = [..._transactions, ...fetched];
+      } else {
+        _transactions = fetched;
+      }
       _totalPages = data['totalPages'] as int? ?? 1;
     } catch (_) {}
     _isLoading = false;

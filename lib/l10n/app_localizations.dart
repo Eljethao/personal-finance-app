@@ -65,6 +65,8 @@ class AppLocalizations {
       'saveTransaction': 'Save Transaction',
       'transactionDetail': 'Transaction Detail',
       'deleteTransaction': 'Delete Transaction',
+      'deleteSuccess': 'Transaction deleted successfully',
+      'loadMore': 'Load more',
       'deleteTransactionConfirm':
           'Are you sure you want to delete this transaction?',
       'noTransactions': 'No transactions found',
@@ -214,6 +216,8 @@ class AppLocalizations {
       'saveTransaction': 'ບັນທຶກລາຍການ',
       'transactionDetail': 'ລາຍລະອຽດລາຍການ',
       'deleteTransaction': 'ລຶບລາຍການ',
+      'deleteSuccess': 'ລຶບລາຍການສໍາເລັດ',
+      'loadMore': 'ໂຫຼດເພີ່ມ',
       'deleteTransactionConfirm': 'ທ່ານຕ້ອງການລຶບລາຍການນີ້ບໍ?',
       'noTransactions': 'ບໍ່ພົບລາຍການ',
       'noTransactionsYet': 'ຍັງບໍ່ມີລາຍການ',

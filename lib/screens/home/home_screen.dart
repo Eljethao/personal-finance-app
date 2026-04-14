@@ -111,9 +111,16 @@ class _HomeScreenState extends State<HomeScreen> {
 // ─────────────────────────────────────────────
 //  Dashboard Page
 // ─────────────────────────────────────────────
-class _DashboardPage extends StatelessWidget {
+class _DashboardPage extends StatefulWidget {
   final Future<void> Function() onRefresh;
   const _DashboardPage({required this.onRefresh});
+
+  @override
+  State<_DashboardPage> createState() => _DashboardPageState();
+}
+
+class _DashboardPageState extends State<_DashboardPage> {
+  int _recentLimit = 10;
 
   @override
   Widget build(BuildContext context) {
@@ -156,7 +163,7 @@ class _DashboardPage extends StatelessWidget {
       ),
       body: RefreshIndicator(
         color: AppTheme.primary,
-        onRefresh: onRefresh,
+        onRefresh: widget.onRefresh,
         child: ListView(
           padding: const EdgeInsets.fromLTRB(20, 8, 20, 120),
           children: [
@@ -268,39 +275,49 @@ class _DashboardPage extends StatelessWidget {
                           style: const TextStyle(
                               color: AppTheme.textSecondary))))
             else
-              Container(
-                decoration: BoxDecoration(
-                  color: AppTheme.surface,
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: AppTheme.cardShadow,
-                ),
-                child: Column(
-                  children: [
-                    ...transactions.transactions.take(10).map((t) {
-                      final isLast =
-                          transactions.transactions.indexOf(t) ==
-                                  (transactions.transactions.length > 10
-                                      ? 9
-                                      : transactions.transactions.length - 1);
-                      return Column(
-                        children: [
-                          TransactionTile(
-                            transaction: t,
-                            onTap: () => Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (_) =>
-                                      TransactionDetailScreen(transaction: t)),
-                            ),
-                          ),
-                          if (!isLast)
-                            const Divider(
-                                height: 1, indent: 80, endIndent: 16),
-                        ],
-                      );
-                    }),
-                  ],
-                ),
+              Column(
+                children: [
+                  Container(
+                    decoration: BoxDecoration(
+                      color: AppTheme.surface,
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: AppTheme.cardShadow,
+                    ),
+                    child: Column(
+                      children: [
+                        ...transactions.transactions.take(_recentLimit).toList().asMap().entries.map((e) {
+                          final idx = e.key;
+                          final t = e.value;
+                          final visibleCount = transactions.transactions.length < _recentLimit
+                              ? transactions.transactions.length
+                              : _recentLimit;
+                          final isLast = idx == visibleCount - 1;
+                          return Column(
+                            children: [
+                              TransactionTile(
+                                transaction: t,
+                                onTap: () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (_) =>
+                                          TransactionDetailScreen(transaction: t)),
+                                ),
+                              ),
+                              if (!isLast)
+                                const Divider(
+                                    height: 1, indent: 80, endIndent: 16),
+                            ],
+                          );
+                        }),
+                      ],
+                    ),
+                  ),
+                  if (_recentLimit < transactions.transactions.length)
+                    TextButton(
+                      onPressed: () => setState(() => _recentLimit += 10),
+                      child: Text(l.t('loadMore')),
+                    ),
+                ],
               ),
           ],
         ),

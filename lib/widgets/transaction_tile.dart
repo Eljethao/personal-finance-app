@@ -29,17 +29,6 @@ class TransactionTile extends StatelessWidget {
     }
   }
 
-  // Best-effort icon from category name
-  IconData _categoryIcon() {
-    final name = transaction.categoryName.toLowerCase();
-    for (final key in kCategoryIcons.keys) {
-      if (name.contains(key) || key.contains(name)) {
-        return kCategoryIcons[key]!;
-      }
-    }
-    return Icons.category_outlined;
-  }
-
   @override
   Widget build(BuildContext context) {
     final catColor = _parseColor(transaction.categoryColor);
@@ -60,7 +49,7 @@ class TransactionTile extends StatelessWidget {
                 color: catColor.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(14),
               ),
-              child: Icon(_categoryIcon(), color: catColor, size: 22),
+              child: Icon(iconFromName(transaction.categoryIcon), color: catColor, size: 22),
             ),
             const SizedBox(width: 14),
             // Name + subtitle

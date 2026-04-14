@@ -7,6 +7,7 @@ import '../../utils/app_theme.dart';
 import '../../utils/formatters.dart';
 import '../../widgets/date_filter_bottom_sheet.dart';
 import '../../providers/date_filter_provider.dart';
+import '../transactions/transaction_list_screen.dart';
 
 class AnalyticsScreen extends StatefulWidget {
   const AnalyticsScreen({super.key});
@@ -124,6 +125,8 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                     final i = item as Map;
                     final color = _parseColor(
                         (i['category'] as Map?)?['color'] ?? '#4CAF50');
+                    final categoryId = (i['category'] as Map?)?['_id'] as String?;
+                    final categoryName = (i['category'] as Map?)?['name'] as String? ?? '';
                     return ListTile(
                       contentPadding: EdgeInsets.zero,
                       leading: Container(
@@ -131,14 +134,29 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                           height: 12,
                           decoration: BoxDecoration(
                               color: color, shape: BoxShape.circle)),
-                      title: Text(
-                          (i['category'] as Map?)?['name'] ?? '',
+                      title: Text(categoryName,
                           style: const TextStyle(fontSize: 13)),
-                      trailing: Text(
-                          Formatters.currency(
-                              (i['total'] ?? 0).toDouble()),
-                          style: const TextStyle(
-                              fontWeight: FontWeight.w600, fontSize: 13)),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                              Formatters.currency(
+                                  (i['total'] ?? 0).toDouble()),
+                              style: const TextStyle(
+                                  fontWeight: FontWeight.w600, fontSize: 13)),
+                          const SizedBox(width: 4),
+                          const Icon(Icons.chevron_right, size: 16, color: Colors.grey),
+                        ],
+                      ),
+                      onTap: categoryId == null ? null : () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => TransactionListScreen(
+                            filterCategoryId: categoryId,
+                            filterCategoryName: categoryName,
+                          ),
+                        ),
+                      ),
                     );
                   }),
                 ],

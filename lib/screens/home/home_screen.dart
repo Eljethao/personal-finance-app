@@ -184,11 +184,11 @@ class _DashboardPageState extends State<_DashboardPage> {
               height: 110,
               child: ListView.builder(
                 scrollDirection: Axis.horizontal,
-                itemCount: wallets.wallets.length,
+                itemCount: wallets.pinnedWallets.length,
                 padding: EdgeInsets.zero,
                 itemBuilder: (_, i) {
-                  final w = wallets.wallets[i];
-                  final isPrimary = i == 0;
+                  final w = wallets.pinnedWallets[i];
+                  final isPrimary = w.id == wallets.defaultWalletId;
                   return GestureDetector(
                     onTap: () => Navigator.push(context,
                         MaterialPageRoute(builder: (_) => const WalletScreen())),

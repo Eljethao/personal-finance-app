@@ -10,6 +10,7 @@ import '../../providers/wallet_provider.dart';
 import '../../utils/app_theme.dart';
 import '../../utils/formatters.dart';
 import '../../utils/icon_map.dart';
+import '../../utils/slip_parser.dart';
 
 class AddTransactionScreen extends StatefulWidget {
   const AddTransactionScreen({super.key});
@@ -28,6 +29,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   DateTime _selectedDate = DateTime.now();
   String? _slipImagePath;
   bool _isLoading = false;
+  bool _isScanning = false;
 
   @override
   void initState() {
@@ -56,6 +58,121 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     final image = await picker.pickImage(
         source: source, maxWidth: 1024, imageQuality: 80);
     if (image != null) setState(() => _slipImagePath = image.path);
+  }
+
+  Future<void> _scanSlip(ImageSource source) async {
+    final picker = ImagePicker();
+    final image = await picker.pickImage(
+        source: source, maxWidth: 1600, imageQuality: 90);
+    if (image == null || !mounted) return;
+
+    setState(() {
+      _slipImagePath = image.path;
+      _isScanning = true;
+    });
+
+    try {
+      final result = await SlipParser.parse(image.path);
+      if (!mounted) return;
+      final l = AppLocalizations.of(context);
+
+      if (!result.hasData) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l.t('couldNotReadSlip'))),
+        );
+        return;
+      }
+
+      setState(() {
+        if (result.amount != null) {
+          _amountCtrl.text = ThousandsSeparatorFormatter.format(
+              result.amount!.toInt().toString());
+        }
+        if (result.date != null) _selectedDate = result.date!;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            '${l.t('slipScanned')}${result.amount != null ? ' ${l.t('amount')}: ${result.amount}' : ''}${result.date != null ? ' ${l.t('date')}: ${result.date!.day}/${result.date!.month}/${result.date!.year}' : ''}',
+          ),
+          backgroundColor: AppTheme.income,
+        ),
+      );
+    } catch (e) {
+      if (mounted) {
+        final l = AppLocalizations.of(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l.t('scanFailed'))),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isScanning = false);
+    }
+  }
+
+  void _showScanPicker() {
+    final l = AppLocalizations.of(context);
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 8),
+              Container(
+                width: 40, height: 4,
+                decoration: BoxDecoration(
+                    color: Colors.grey[300],
+                    borderRadius: BorderRadius.circular(2)),
+              ),
+              const SizedBox(height: 16),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Text(l.t('scanBankSlip'),
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+              ),
+              const SizedBox(height: 4),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Text(l.t('autoFillFromSlip'),
+                    style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
+              ),
+              const SizedBox(height: 12),
+              ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                      color: AppTheme.primary.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(10)),
+                  child: const Icon(Icons.camera_alt_rounded, color: AppTheme.primary),
+                ),
+                title: Text(l.t('takePhoto'), style: const TextStyle(fontWeight: FontWeight.w500)),
+                subtitle: Text(l.t('useCameraForSlip')),
+                onTap: () { Navigator.pop(ctx); _scanSlip(ImageSource.camera); },
+              ),
+              ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                      color: AppTheme.primary.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(10)),
+                  child: const Icon(Icons.photo_library_rounded, color: AppTheme.primary),
+                ),
+                title: Text(l.t('chooseFromGallery'), style: const TextStyle(fontWeight: FontWeight.w500)),
+                subtitle: Text(l.t('pickExistingSlip')),
+                onTap: () { Navigator.pop(ctx); _scanSlip(ImageSource.gallery); },
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   void _showImagePicker() {
@@ -154,6 +271,46 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // ── Scan slip button ─────────────────────────
+              InkWell(
+                onTap: _isScanning ? null : _showScanPicker,
+                borderRadius: BorderRadius.circular(16),
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+                  decoration: BoxDecoration(
+                    gradient: _isScanning ? null : AppTheme.primaryGradient,
+                    color: _isScanning ? AppTheme.surface : null,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: _isScanning ? null : AppTheme.primaryShadow,
+                    border: _isScanning
+                        ? Border.all(color: AppTheme.primary.withValues(alpha: 0.3))
+                        : null,
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      if (_isScanning)
+                        const SizedBox(
+                          width: 18, height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2, color: AppTheme.primary),
+                        )
+                      else
+                        const Icon(Icons.document_scanner_rounded, color: Colors.white, size: 20),
+                      const SizedBox(width: 10),
+                      Text(
+                        _isScanning ? l.t('scanningSlip') : l.t('scanBankSlip'),
+                        style: TextStyle(
+                          color: _isScanning ? AppTheme.primary : Colors.white,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
               Row(
                 children: [
                   for (final t in ['income', 'expense', 'investment'])

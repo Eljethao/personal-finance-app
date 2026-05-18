@@ -106,36 +106,75 @@ class _WalletScreenState extends State<WalletScreen> {
                   itemCount: provider.wallets.length,
                   itemBuilder: (_, i) {
                     final w = provider.wallets[i];
+                    final isDefault = w.id == provider.defaultWalletId;
+                    final isPinned = provider.isPinned(w.id);
                     return Card(
                       margin: const EdgeInsets.only(bottom: 8),
-                      child: ListTile(
-                        leading: Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                              color: AppTheme.primary.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(8)),
-                          child: const Icon(Icons.account_balance_wallet,
-                              color: AppTheme.primary),
-                        ),
-                        title: Text(w.name,
-                            style: const TextStyle(
-                                fontWeight: FontWeight.w600)),
-                        subtitle: Text(w.currency,
-                            style:
-                                TextStyle(color: Colors.grey.shade600)),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 10),
+                        child: Row(
                           children: [
-                            Text(
-                              Formatters.currency(w.balance,
-                                  currency: w.currency),
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: w.balance >= 0
-                                    ? AppTheme.income
-                                    : AppTheme.expense,
-                                fontSize: 13,
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                  color: AppTheme.primary
+                                      .withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(8)),
+                              child: const Icon(
+                                  Icons.account_balance_wallet,
+                                  color: AppTheme.primary),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    w.name,
+                                    style: const TextStyle(
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 15),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    w.currency,
+                                    style: TextStyle(
+                                        color: Colors.grey.shade600,
+                                        fontSize: 12),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    Formatters.currency(w.balance,
+                                        currency: w.currency),
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: w.balance >= 0
+                                          ? AppTheme.income
+                                          : AppTheme.expense,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ],
                               ),
+                            ),
+                            IconButton(
+                              icon: Icon(
+                                isPinned ? Icons.push_pin_rounded : Icons.push_pin_outlined,
+                                size: 18,
+                                color: isPinned ? AppTheme.primary : Colors.grey,
+                              ),
+                              onPressed: () => provider.togglePin(w.id),
+                              tooltip: isPinned ? 'Unpin from home' : 'Pin to home screen',
+                            ),
+                            IconButton(
+                              icon: Icon(
+                                isDefault ? Icons.star_rounded : Icons.star_border_rounded,
+                                size: 20,
+                                color: isDefault ? Colors.amber : Colors.grey,
+                              ),
+                              onPressed: isDefault ? null : () => provider.setDefaultWallet(w.id),
+                              tooltip: isDefault ? 'Default wallet' : 'Set as default',
                             ),
                             IconButton(
                                 icon: const Icon(Icons.edit_outlined,

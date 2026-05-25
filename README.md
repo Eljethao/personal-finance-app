@@ -37,25 +37,25 @@ The app is bilingual (English + Lao) and ships for iOS, Android, macOS, and Web.
 > Screens captured on iPhone 15 Pro at 1179×2556. See [`docs/screenshots/README.md`](docs/screenshots/README.md) for the capture checklist.
 
 ### Home — Wallet Overview
-![Home](docs/screenshots/home.jpeg)
+<img src="docs/screenshots/home.jpeg" width="300" alt="Home" />
 
 ### Transactions — List & Detail
-![Transactions](docs/screenshots/transactions.jpeg)
+<img src="docs/screenshots/transactions.jpeg" width="300" alt="Transactions" />
 
 ### Add Transaction — Slip Parser
-![Slip Parser](docs/screenshots/slip-parser.jpeg)
+<img src="docs/screenshots/slip-parser.jpeg" width="300" alt="Slip Parser" />
 
 ### Budgets — Per-Category Tracking
-![Budgets](docs/screenshots/budgets.jpeg)
+<img src="docs/screenshots/budgets.jpeg" width="300" alt="Budgets" />
 
 ### Analytics — Spending Breakdown
-![Analytics](docs/screenshots/analytics.jpeg)
+<img src="docs/screenshots/analytics.jpeg" width="300" alt="Analytics" />
 
 ### Wallets — Multi-Account Management
-![Wallets](docs/screenshots/wallets.jpeg)
+<img src="docs/screenshots/wallets.jpeg" width="300" alt="Wallets" />
 
 ### Biometric Lock Screen
-![Lock Screen](docs/screenshots/lock-screen.jpeg)
+<img src="docs/screenshots/lock-screen.jpeg" width="300" alt="Lock Screen" />
 
 ---
 

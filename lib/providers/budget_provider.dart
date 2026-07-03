@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import '../models/budget_model.dart';
-import '../services/api_service.dart';
+import '../services/supabase_service.dart';
 
 class BudgetProvider extends ChangeNotifier {
-  final _api = ApiService();
+  final _supabase = SupabaseService().client;
   List<BudgetModel> _budgets = [];
   List<BudgetStatus> _budgetStatuses = [];
   bool _isLoading = false;
@@ -12,12 +12,15 @@ class BudgetProvider extends ChangeNotifier {
   List<BudgetStatus> get budgetStatuses => _budgetStatuses;
   bool get isLoading => _isLoading;
 
+  static const _select = '*, category:categories(name,icon,color)';
+
   Future<void> fetchBudgets() async {
     _isLoading = true;
     notifyListeners();
     try {
-      final res = await _api.get('/budgets');
-      _budgets = (res.data['data'] as List)
+      final data =
+          await _supabase.from('budgets').select(_select).order('created_at');
+      _budgets = (data as List)
           .map((b) => BudgetModel.fromJson(b as Map<String, dynamic>))
           .toList();
     } catch (_) {}
@@ -27,8 +30,8 @@ class BudgetProvider extends ChangeNotifier {
 
   Future<void> fetchBudgetStatus() async {
     try {
-      final res = await _api.get('/budgets/status');
-      _budgetStatuses = (res.data['data'] as List)
+      final data = await _supabase.rpc('get_budget_status');
+      _budgetStatuses = (data as List)
           .map((b) => BudgetStatus.fromJson(b as Map<String, dynamic>))
           .toList();
       notifyListeners();
@@ -37,8 +40,19 @@ class BudgetProvider extends ChangeNotifier {
 
   Future<bool> createBudget(Map<String, dynamic> data) async {
     try {
-      final res = await _api.post('/budgets', data: data);
-      _budgets.add(BudgetModel.fromJson(res.data['data'] as Map<String, dynamic>));
+      final userId = _supabase.auth.currentUser!.id;
+      final res = await _supabase
+          .from('budgets')
+          .insert({
+            'user_id': userId,
+            'category_id': data['categoryId'],
+            'amount': data['amount'],
+            'month': data['month'],
+            'year': data['year'],
+          })
+          .select(_select)
+          .single();
+      _budgets.add(BudgetModel.fromJson(res));
       notifyListeners();
       return true;
     } catch (_) {
@@ -48,10 +62,20 @@ class BudgetProvider extends ChangeNotifier {
 
   Future<bool> updateBudget(String id, Map<String, dynamic> data) async {
     try {
-      final res = await _api.put('/budgets/$id', data: data);
+      final update = <String, dynamic>{
+        if (data.containsKey('amount')) 'amount': data['amount'],
+        if (data.containsKey('month')) 'month': data['month'],
+        if (data.containsKey('year')) 'year': data['year'],
+      };
+      final res = await _supabase
+          .from('budgets')
+          .update(update)
+          .eq('id', id)
+          .select(_select)
+          .single();
       final idx = _budgets.indexWhere((b) => b.id == id);
       if (idx != -1) {
-        _budgets[idx] = BudgetModel.fromJson(res.data['data'] as Map<String, dynamic>);
+        _budgets[idx] = BudgetModel.fromJson(res);
       }
       notifyListeners();
       return true;
@@ -62,7 +86,7 @@ class BudgetProvider extends ChangeNotifier {
 
   Future<bool> deleteBudget(String id) async {
     try {
-      await _api.delete('/budgets/$id');
+      await _supabase.from('budgets').delete().eq('id', id);
       _budgets.removeWhere((b) => b.id == id);
       notifyListeners();
       return true;

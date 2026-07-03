@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import '../../l10n/app_localizations.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/category_provider.dart';
-import '../../providers/wallet_provider.dart';
 import '../../utils/app_theme.dart';
 import '../home/home_screen.dart';
 
@@ -38,13 +37,11 @@ class _LoginPinScreenState extends State<LoginPinScreen> {
     setState(() => _isLoading = true);
     final auth = context.read<AuthProvider>();
     final categoryProvider = context.read<CategoryProvider>();
-    final walletProvider = context.read<WalletProvider>();
     final l = AppLocalizations.of(context);
     final success = await auth.login(widget.phone, _pin);
     if (success && mounted) {
       await auth.savePin(_pin);
       await categoryProvider.fetchCategories();
-      await walletProvider.fetchWallets();
       if (!mounted) return;
       Navigator.pushAndRemoveUntil(
         context,

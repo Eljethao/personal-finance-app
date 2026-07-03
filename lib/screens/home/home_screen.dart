@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../l10n/app_localizations.dart';
 import '../../providers/analytics_provider.dart';
-import '../../providers/wallet_provider.dart';
 import '../../providers/transaction_provider.dart';
 import '../../providers/budget_provider.dart';
 import '../../utils/app_theme.dart';
@@ -12,7 +11,6 @@ import '../../widgets/date_filter_bottom_sheet.dart';
 import '../transactions/add_transaction_screen.dart';
 import '../transactions/transaction_detail_screen.dart';
 import '../transactions/transaction_list_screen.dart';
-import '../wallets/wallet_screen.dart';
 import '../categories/category_screen.dart';
 import '../export/export_screen.dart';
 import '../analytics/analytics_screen.dart';
@@ -55,7 +53,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
     await Future.wait([
       context.read<AnalyticsProvider>().fetchSummary(startDate: start, endDate: end),
-      context.read<WalletProvider>().fetchWallets(),
       context.read<TransactionProvider>().fetchTransactions(startDate: start, endDate: end),
       context.read<BudgetProvider>().fetchBudgetStatus(),
     ]);
@@ -126,7 +123,6 @@ class _DashboardPageState extends State<_DashboardPage> {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     final analytics = context.watch<AnalyticsProvider>();
-    final wallets = context.watch<WalletProvider>();
     final transactions = context.watch<TransactionProvider>();
     final summary = analytics.summary;
 
@@ -148,10 +144,6 @@ class _DashboardPageState extends State<_DashboardPage> {
             },
           ),
           IconButton(
-              icon: const Icon(Icons.account_balance_wallet_outlined),
-              onPressed: () => Navigator.push(context,
-                  MaterialPageRoute(builder: (_) => const WalletScreen()))),
-          IconButton(
               icon: const Icon(Icons.category_outlined),
               onPressed: () => Navigator.push(context,
                   MaterialPageRoute(builder: (_) => const CategoryScreen()))),
@@ -172,86 +164,6 @@ class _DashboardPageState extends State<_DashboardPage> {
               _BalanceCard(summary: summary, l: l)
             else
               _BalanceCardSkeleton(),
-
-            const SizedBox(height: 28),
-
-            // ── Wallets ───────────────────────────────────
-            _SectionHeader(title: l.t('wallets'), action: l.t('seeAll'),
-                onTap: () => Navigator.push(context,
-                    MaterialPageRoute(builder: (_) => const WalletScreen()))),
-            const SizedBox(height: 12),
-            SizedBox(
-              height: 110,
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                itemCount: wallets.pinnedWallets.length,
-                padding: EdgeInsets.zero,
-                itemBuilder: (_, i) {
-                  final w = wallets.pinnedWallets[i];
-                  final isPrimary = w.id == wallets.defaultWalletId;
-                  return GestureDetector(
-                    onTap: () => Navigator.push(context,
-                        MaterialPageRoute(builder: (_) => const WalletScreen())),
-                    child: Container(
-                      width: 168,
-                      margin: const EdgeInsets.only(right: 12),
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: isPrimary ? AppTheme.primary : AppTheme.surface,
-                        borderRadius: BorderRadius.circular(20),
-                        boxShadow: isPrimary
-                            ? AppTheme.primaryShadow
-                            : AppTheme.cardShadow,
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Icon(
-                            Icons.account_balance_wallet_rounded,
-                            color: isPrimary
-                                ? Colors.white.withValues(alpha: 0.7)
-                                : AppTheme.primary,
-                            size: 22,
-                          ),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                w.name,
-                                style: TextStyle(
-                                  color: isPrimary
-                                      ? Colors.white70
-                                      : AppTheme.textSecondary,
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                Formatters.currency(w.balance,
-                                    currency: w.currency),
-                                style: TextStyle(
-                                  color: isPrimary
-                                      ? Colors.white
-                                      : AppTheme.textPrimary,
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w800,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
 
             const SizedBox(height: 28),
 

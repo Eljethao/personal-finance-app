@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../l10n/app_localizations.dart';
 import '../../providers/transaction_provider.dart';
+import '../../utils/app_theme.dart';
+import '../../utils/formatters.dart';
 import '../../widgets/transaction_tile.dart';
 import '../../widgets/date_filter_bottom_sheet.dart';
 import '../../providers/date_filter_provider.dart';
@@ -80,6 +82,32 @@ class _TransactionListScreenState extends State<TransactionListScreen> {
     super.dispose();
   }
 
+  String _totalLabel(AppLocalizations l) {
+    switch (_selectedType) {
+      case 'income':
+        return l.t('totalIncome');
+      case 'expense':
+        return l.t('totalExpense');
+      case 'investment':
+        return l.t('totalInvestment');
+      default:
+        return l.t('totalAmount');
+    }
+  }
+
+  Color _totalColor() {
+    switch (_selectedType) {
+      case 'income':
+        return AppTheme.income;
+      case 'expense':
+        return AppTheme.expense;
+      case 'investment':
+        return AppTheme.investment;
+      default:
+        return AppTheme.primary;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
@@ -116,33 +144,71 @@ class _TransactionListScreenState extends State<TransactionListScreen> {
       ),
       body: _initializing
           ? const Center(child: CircularProgressIndicator())
-          : provider.transactions.isEmpty
-              ? Center(child: Text(l.t('noTransactions')))
-              : ListView.builder(
-                  controller: _scrollController,
-                  padding: const EdgeInsets.all(8),
-                  itemCount: provider.transactions.length + (_isFetchingMore ? 1 : 0),
-                  itemBuilder: (_, i) {
-                    if (i == provider.transactions.length) {
-                      return const Padding(
-                        padding: EdgeInsets.all(16),
-                        child: Center(child: CircularProgressIndicator()),
-                      );
-                    }
-                    final t = provider.transactions[i];
-                    return Card(
-                      margin: const EdgeInsets.only(bottom: 4),
-                      child: TransactionTile(
-                        transaction: t,
-                        onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (_) => TransactionDetailScreen(transaction: t)),
-                        ).then((_) => _fetchData(reset: true)),
+          : Column(
+              children: [
+                Container(
+                  width: double.infinity,
+                  margin: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+                  decoration: BoxDecoration(
+                    color: _totalColor().withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: _totalColor().withValues(alpha: 0.2)),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        _totalLabel(l),
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: AppTheme.textSecondary,
+                        ),
                       ),
-                    );
-                  },
+                      Text(
+                        Formatters.currency(provider.total),
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w800,
+                          color: _totalColor(),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
+                Expanded(
+                  child: provider.transactions.isEmpty
+                      ? Center(child: Text(l.t('noTransactions')))
+                      : ListView.builder(
+                          controller: _scrollController,
+                          padding: const EdgeInsets.all(8),
+                          itemCount: provider.transactions.length + (_isFetchingMore ? 1 : 0),
+                          itemBuilder: (_, i) {
+                            if (i == provider.transactions.length) {
+                              return const Padding(
+                                padding: EdgeInsets.all(16),
+                                child: Center(child: CircularProgressIndicator()),
+                              );
+                            }
+                            final t = provider.transactions[i];
+                            return Card(
+                              margin: const EdgeInsets.only(bottom: 4),
+                              child: TransactionTile(
+                                transaction: t,
+                                onTap: () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (_) => TransactionDetailScreen(transaction: t)),
+                                ).then((_) => _fetchData(reset: true)),
+                              ),
+                            );
+                          },
+                        ),
+                ),
+              ],
+            ),
     );
   }
 }

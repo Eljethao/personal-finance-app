@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import '../models/category_model.dart';
-import '../services/api_service.dart';
+import '../services/supabase_service.dart';
 
 class CategoryProvider extends ChangeNotifier {
-  final _api = ApiService();
+  final _supabase = SupabaseService().client;
   List<CategoryModel> _categories = [];
   bool _isLoading = false;
 
@@ -20,8 +20,8 @@ class CategoryProvider extends ChangeNotifier {
     _isLoading = true;
     notifyListeners();
     try {
-      final res = await _api.get('/categories');
-      _categories = (res.data['data'] as List)
+      final data = await _supabase.from('categories').select().order('created_at');
+      _categories = (data as List)
           .map((c) => CategoryModel.fromJson(c as Map<String, dynamic>))
           .toList();
     } catch (_) {}
@@ -31,8 +31,19 @@ class CategoryProvider extends ChangeNotifier {
 
   Future<bool> createCategory(Map<String, dynamic> data) async {
     try {
-      final res = await _api.post('/categories', data: data);
-      _categories.add(CategoryModel.fromJson(res.data['data'] as Map<String, dynamic>));
+      final userId = _supabase.auth.currentUser!.id;
+      final res = await _supabase
+          .from('categories')
+          .insert({
+            'user_id': userId,
+            'name': data['name'],
+            'icon': data['icon'],
+            'color': data['color'],
+            'type': data['type'],
+          })
+          .select()
+          .single();
+      _categories.add(CategoryModel.fromJson(res));
       notifyListeners();
       return true;
     } catch (_) {
@@ -42,11 +53,16 @@ class CategoryProvider extends ChangeNotifier {
 
   Future<bool> updateCategory(String id, Map<String, dynamic> data) async {
     try {
-      final res = await _api.put('/categories/$id', data: data);
+      final update = <String, dynamic>{
+        if (data.containsKey('name')) 'name': data['name'],
+        if (data.containsKey('icon')) 'icon': data['icon'],
+        if (data.containsKey('color')) 'color': data['color'],
+      };
+      final res =
+          await _supabase.from('categories').update(update).eq('id', id).select().single();
       final idx = _categories.indexWhere((c) => c.id == id);
       if (idx != -1) {
-        _categories[idx] =
-            CategoryModel.fromJson(res.data['data'] as Map<String, dynamic>);
+        _categories[idx] = CategoryModel.fromJson(res);
       }
       notifyListeners();
       return true;
@@ -57,7 +73,7 @@ class CategoryProvider extends ChangeNotifier {
 
   Future<bool> deleteCategory(String id) async {
     try {
-      await _api.delete('/categories/$id');
+      await _supabase.from('categories').delete().eq('id', id);
       _categories.removeWhere((c) => c.id == id);
       notifyListeners();
       return true;

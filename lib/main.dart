@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
+import 'services/supabase_service.dart';
 import 'providers/auth_provider.dart';
 import 'providers/transaction_provider.dart';
-import 'providers/wallet_provider.dart';
 import 'providers/category_provider.dart';
 import 'providers/budget_provider.dart';
 import 'providers/analytics_provider.dart';
@@ -14,6 +14,7 @@ import 'l10n/app_localizations.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await SupabaseService.initialize();
   runApp(const MyApp());
 }
 
@@ -26,7 +27,6 @@ class MyApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => TransactionProvider()),
-        ChangeNotifierProvider(create: (_) => WalletProvider()),
         ChangeNotifierProvider(create: (_) => CategoryProvider()),
         ChangeNotifierProvider(create: (_) => BudgetProvider()),
         ChangeNotifierProvider(create: (_) => AnalyticsProvider()),
@@ -35,7 +35,7 @@ class MyApp extends StatelessWidget {
       child: Consumer<AuthProvider>(
         builder: (context, auth, _) {
           return MaterialApp(
-            title: 'Personal Finance',
+            title: 'ກະເປົາເງີນ',
             debugShowCheckedModeBanner: false,
             theme: AppTheme.lightThemeForLocale(auth.preferredLanguage),
             locale: Locale(auth.preferredLanguage),

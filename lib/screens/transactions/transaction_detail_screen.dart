@@ -54,7 +54,7 @@ class TransactionDetailScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    '${transaction.type == 'income' ? '+' : '-'}${Formatters.currency(transaction.amount, currency: transaction.currency)}',
+                    '${transaction.type == 'income' ? '+' : '-'}${Formatters.currency(transaction.amount)}',
                     style: TextStyle(
                         fontSize: 28,
                         fontWeight: FontWeight.bold,
@@ -75,11 +75,6 @@ class TransactionDetailScreen extends StatelessWidget {
                     icon: Icons.category_outlined,
                     label: l.t('category'),
                     value: transaction.categoryName),
-                const Divider(height: 1),
-                _InfoRow(
-                    icon: Icons.account_balance_wallet_outlined,
-                    label: l.t('wallet'),
-                    value: transaction.walletName),
                 const Divider(height: 1),
                 _InfoRow(
                     icon: Icons.calendar_today_outlined,

@@ -13,7 +13,7 @@ class AppLocalizations {
   static const Map<String, Map<String, String>> _strings = {
     'en': {
       // App
-      'appName': 'Personal Finance',
+      'appName': 'ກະເປົາເງີນ',
       'loading': 'Loading...',
 
       // Auth
@@ -42,13 +42,11 @@ class AppLocalizations {
       'home': 'Home',
       'dashboard': 'Dashboard',
       'transactions': 'Transactions',
-      'wallets': 'Wallets',
       'categories': 'Categories',
       'budgets': 'Budgets',
       'analytics': 'Analytics',
       'settings': 'Settings',
       'export': 'Export',
-      'seeAll': 'See all',
 
       // Transaction types
       'income': 'Income',
@@ -57,11 +55,14 @@ class AppLocalizations {
       'totalIncome': 'Total Income',
       'totalExpense': 'Total Expenses',
       'totalInvestment': 'Total Investment',
+      'totalAmount': 'Total Amount',
+      'other': 'Other',
       'netBalance': 'Net Balance',
 
       // Transactions
       'recentTransactions': 'Recent Transactions',
       'addTransaction': 'Add Transaction',
+      'editTransaction': 'Edit Transaction',
       'saveTransaction': 'Save Transaction',
       'transactionDetail': 'Transaction Detail',
       'deleteTransaction': 'Delete Transaction',
@@ -73,7 +74,6 @@ class AppLocalizations {
       'noTransactionsYet': 'No transactions yet',
       'amount': 'Amount',
       'category': 'Category',
-      'wallet': 'Wallet',
       'date': 'Date',
       'note': 'Note (optional)',
       'receipt': 'Receipt',
@@ -82,15 +82,7 @@ class AppLocalizations {
       'camera': 'Camera',
       'gallery': 'Gallery',
       'selectCategory': 'Please select a category',
-      'selectWallet': 'Please select a wallet',
       'failedToSave': 'Failed to save transaction',
-
-      // Wallets
-      'addWallet': 'Add Wallet',
-      'editWallet': 'Edit Wallet',
-      'noWallets': 'No wallets. Tap + to add one.',
-      'currency': 'Currency',
-      'initialBalance': 'Initial Balance',
 
       // Categories
       'addCategory': 'Add Category',
@@ -175,7 +167,7 @@ class AppLocalizations {
     },
     'lo': {
       // App
-      'appName': 'ການເງິນສ່ວນຕົວ',
+      'appName': 'ກະເປົາເງີນ',
       'loading': 'ກຳລັງໂຫລດ...',
 
       // Auth
@@ -204,13 +196,11 @@ class AppLocalizations {
       'home': 'ໜ້າຫຼັກ',
       'dashboard': 'ໜ້າຫຼັກ',
       'transactions': 'ລາຍການ',
-      'wallets': 'ກະເປົ໋າ',
       'categories': 'ປະເພດ',
       'budgets': 'ງົບປະມານ',
       'analytics': 'ການວິເຄາະ',
       'settings': 'ການຕັ້ງຄ່າ',
       'export': 'ສົ່ງອອກ',
-      'seeAll': 'ເບິ່ງທັງໝົດ',
 
       // Transaction types
       'income': 'ລາຍຮັບ',
@@ -219,11 +209,14 @@ class AppLocalizations {
       'totalIncome': 'ລາຍຮັບທັງໝົດ',
       'totalExpense': 'ລາຍຈ່າຍທັງໝົດ',
       'totalInvestment': 'ການລົງທຶນທັງໝົດ',
+      'totalAmount': 'ຍອດລວມທັງໝົດ',
+      'other': 'ອື່ນໆ',
       'netBalance': 'ຍອດສຸດທິ',
 
       // Transactions
       'recentTransactions': 'ລາຍການຫຼ້າສຸດ',
       'addTransaction': 'ເພີ່ມລາຍການ',
+      'editTransaction': 'ແກ້ໄຂລາຍການ',
       'saveTransaction': 'ບັນທຶກລາຍການ',
       'transactionDetail': 'ລາຍລະອຽດລາຍການ',
       'deleteTransaction': 'ລຶບລາຍການ',
@@ -234,7 +227,6 @@ class AppLocalizations {
       'noTransactionsYet': 'ຍັງບໍ່ມີລາຍການ',
       'amount': 'ຈຳນວນ',
       'category': 'ປະເພດ',
-      'wallet': 'ກະເປົ໋າ',
       'date': 'ວັນທີ',
       'note': 'ໝາຍເຫດ (ທາງເລືອກ)',
       'receipt': 'ໃບບິນ',
@@ -243,15 +235,7 @@ class AppLocalizations {
       'camera': 'ກ້ອງຖ່າຍຮູບ',
       'gallery': 'ຄັງຮູບ',
       'selectCategory': 'ກະລຸນາເລືອກປະເພດ',
-      'selectWallet': 'ກະລຸນາເລືອກກະເປົ໋າ',
       'failedToSave': 'ບໍ່ສາມາດບັນທຶກລາຍການໄດ້',
-
-      // Wallets
-      'addWallet': 'ເພີ່ມກະເປົ໋າ',
-      'editWallet': 'ແກ້ໄຂກະເປົ໋າ',
-      'noWallets': 'ບໍ່ມີກະເປົ໋າ. ກົດ + ເພື່ອເພີ່ມ.',
-      'currency': 'ສະກຸນເງິນ',
-      'initialBalance': 'ຍອດເງິນເລີ່ມຕົ້ນ',
 
       // Categories
       'addCategory': 'ເພີ່ມປະເພດ',

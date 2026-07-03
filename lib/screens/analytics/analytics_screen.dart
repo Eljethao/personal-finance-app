@@ -91,74 +91,147 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                   Builder(builder: (ctx) {
                     final total = byCategory.fold<double>(
                         0, (s, i) => s + ((i as Map)['total'] ?? 0).toDouble());
-                    return Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: AppTheme.surface,
-                        borderRadius: BorderRadius.circular(20),
-                        boxShadow: AppTheme.cardShadow,
-                      ),
-                      child: Column(
-                        children: [
-                          // Donut chart with total in center
-                          SizedBox(
-                            height: 200,
-                            child: Stack(
-                              alignment: Alignment.center,
-                              children: [
-                                PieChart(
-                                  PieChartData(
-                                    sections: byCategory.map((item) {
-                                      final i = item as Map;
-                                      final pct = total > 0
-                                          ? (i['total'] ?? 0) / total * 100
-                                          : 0.0;
-                                      final color = _parseColor(
-                                          (i['category'] as Map?)?['color'] ?? '#4CAF50');
-                                      return PieChartSectionData(
-                                        value: (i['total'] ?? 0).toDouble(),
-                                        title: pct >= 5 ? '${pct.toStringAsFixed(0)}%' : '',
-                                        color: color,
-                                        radius: 70,
-                                        titleStyle: const TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      );
-                                    }).toList(),
-                                    sectionsSpace: 3,
-                                    centerSpaceRadius: 52,
-                                  ),
-                                ),
-                                Column(
-                                  mainAxisSize: MainAxisSize.min,
+
+                    // Cap the donut at the top 5 categories + an aggregated
+                    // "Other" slice — with 20+ real categories, plotting every
+                    // one produces a cluster of slivers that visually blur
+                    // together. The full breakdown stays in the list below.
+                    const topN = 5;
+                    final sorted = byCategory.cast<Map>();
+                    final topItems = sorted.take(topN).toList();
+                    final otherTotal = sorted
+                        .skip(topN)
+                        .fold<double>(0, (s, i) => s + (i['total'] ?? 0).toDouble());
+
+                    final pieEntries = <Map<String, dynamic>>[
+                      ...topItems.map((i) => {
+                            'name': (i['category'] as Map?)?['name'] ?? '',
+                            'color': _parseColor(
+                                (i['category'] as Map?)?['color'] ?? '#4CAF50'),
+                            'total': (i['total'] ?? 0).toDouble(),
+                          }),
+                      if (otherTotal > 0)
+                        {
+                          'name': l.t('other'),
+                          'color': AppTheme.textSecondary,
+                          'total': otherTotal,
+                        },
+                    ];
+
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        // ── Donut card ──────────────────────────
+                        Container(
+                          padding: const EdgeInsets.all(20),
+                          decoration: BoxDecoration(
+                            color: AppTheme.surface,
+                            borderRadius: BorderRadius.circular(20),
+                            boxShadow: AppTheme.cardShadow,
+                          ),
+                          child: Column(
+                            children: [
+                              SizedBox(
+                                height: 200,
+                                child: Stack(
+                                  alignment: Alignment.center,
                                   children: [
-                                    Text(l.t('expense'),
-                                        style: const TextStyle(
-                                          fontSize: 10,
-                                          color: AppTheme.textSecondary,
-                                          fontWeight: FontWeight.w500,
-                                        )),
-                                    const SizedBox(height: 2),
-                                    Text(
-                                      Formatters.currency(total),
-                                      style: const TextStyle(
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w800,
-                                        color: AppTheme.textPrimary,
+                                    PieChart(
+                                      PieChartData(
+                                        sections: pieEntries.map((e) {
+                                          final pct = total > 0
+                                              ? (e['total'] as double) / total * 100
+                                              : 0.0;
+                                          return PieChartSectionData(
+                                            value: e['total'] as double,
+                                            title: pct >= 8
+                                                ? '${pct.toStringAsFixed(0)}%'
+                                                : '',
+                                            color: e['color'] as Color,
+                                            radius: 60,
+                                            titleStyle: const TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          );
+                                        }).toList(),
+                                        sectionsSpace: 4,
+                                        centerSpaceRadius: 58,
                                       ),
-                                      textAlign: TextAlign.center,
+                                    ),
+                                    Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Text(l.t('expense'),
+                                            style: const TextStyle(
+                                              fontSize: 10,
+                                              color: AppTheme.textSecondary,
+                                              fontWeight: FontWeight.w500,
+                                            )),
+                                        const SizedBox(height: 2),
+                                        Text(
+                                          Formatters.currency(total),
+                                          style: const TextStyle(
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.w800,
+                                            color: AppTheme.textPrimary,
+                                          ),
+                                          textAlign: TextAlign.center,
+                                        ),
+                                      ],
                                     ),
                                   ],
                                 ),
-                              ],
-                            ),
+                              ),
+                              const SizedBox(height: 18),
+                              // Compact legend — only the slices actually
+                              // drawn above, so it never grows unreadable.
+                              Wrap(
+                                alignment: WrapAlignment.center,
+                                spacing: 16,
+                                runSpacing: 8,
+                                children: pieEntries.map((e) {
+                                  final pct = total > 0
+                                      ? (e['total'] as double) / total * 100
+                                      : 0.0;
+                                  return Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Container(
+                                        width: 9,
+                                        height: 9,
+                                        decoration: BoxDecoration(
+                                          color: e['color'] as Color,
+                                          shape: BoxShape.circle,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 6),
+                                      Text(
+                                        '${e['name']} · ${pct.toStringAsFixed(0)}%',
+                                        style: const TextStyle(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w600,
+                                          color: AppTheme.textPrimary,
+                                        ),
+                                      ),
+                                    ],
+                                  );
+                                }).toList(),
+                              ),
+                            ],
                           ),
-                          const SizedBox(height: 8),
-                          const Divider(height: 1),
-                          const SizedBox(height: 4),
-                          // Category rows with progress bars
+                        ),
+                        const SizedBox(height: 16),
+                        // ── Full breakdown card (separate from the donut) ──
+                        Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: AppTheme.surface,
+                            borderRadius: BorderRadius.circular(20),
+                            boxShadow: AppTheme.cardShadow,
+                          ),
+                          child: Column(children: [
                           ...byCategory.map((item) {
                             final i = item as Map;
                             final color = _parseColor(
@@ -242,8 +315,9 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                               ),
                             );
                           }),
-                        ],
-                      ),
+                          ]),
+                        ),
+                      ],
                     );
                   }),
                 ],

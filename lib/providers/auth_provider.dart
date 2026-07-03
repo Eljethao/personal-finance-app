@@ -1,14 +1,13 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/user_model.dart';
-import '../services/api_service.dart';
+import '../services/supabase_service.dart';
 import '../utils/constants.dart';
-import '../utils/jwt_utils.dart';
 
 class AuthProvider extends ChangeNotifier {
-  final _api = ApiService();
+  final _supabase = SupabaseService().client;
   final _storage = const FlutterSecureStorage();
 
   UserModel? _user;
@@ -23,31 +22,33 @@ class AuthProvider extends ChangeNotifier {
   String get preferredLanguage => _preferredLanguage;
   bool get biometricEnabled => _biometricEnabled;
 
+  /// Supabase phone auth expects E.164 (e.g. +8562012345678). Numbers typed
+  /// without a country code are assumed local and get the default prefixed.
+  String _normalizePhone(String raw) {
+    var p = raw.trim().replaceAll(RegExp(r'[\s-]'), '');
+    if (p.startsWith('+')) return p;
+    if (p.startsWith('0')) p = p.substring(1);
+    return '${AppConstants.defaultCountryCode}$p';
+  }
+
+  UserModel _userFromSupabase(User u) => UserModel(
+        id: u.id,
+        name: (u.userMetadata?['name'] as String?) ?? '',
+        phone: u.phone ?? '',
+        preferredLanguage: _preferredLanguage,
+      );
+
   Future<void> init() async {
     final prefs = await SharedPreferences.getInstance();
     _preferredLanguage = prefs.getString(AppConstants.langKey) ?? 'lo';
     _biometricEnabled = prefs.getBool(AppConstants.biometricKey) ?? false;
-    final token = prefs.getString(AppConstants.tokenKey);
 
-    if (token != null && !JwtUtils.isTokenExpired(token)) {
+    final currentUser = _supabase.auth.currentUser;
+    if (_supabase.auth.currentSession != null && currentUser != null) {
       _isAuthenticated = true;
-      
-      final userDataStr = prefs.getString(AppConstants.userKey);
-      if (userDataStr != null) {
-        try {
-          _user = UserModel.fromJson(jsonDecode(userDataStr));
-        } catch (_) {}
-      }
-
-      _api.get('/auth/me').then((res) {
-        final data = res.data['data'] as Map<String, dynamic>;
-        _user = UserModel.fromJson(data);
-        prefs.setString(AppConstants.userKey, jsonEncode(_user!.toJson()));
-        notifyListeners();
-      }).catchError((_) {});
+      _user = _userFromSupabase(currentUser);
     } else {
-      await _api.clearToken();
-      await prefs.remove(AppConstants.userKey);
+      _isAuthenticated = false;
     }
     notifyListeners();
   }
@@ -57,18 +58,15 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
     try {
       debugPrint('[Auth] Register attempt: phone=$phone, name=$name');
-      final res = await _api.post('/auth/register', data: {
-        'name': name,
-        'phone': phone,
-        'pin': pin,
-      });
-      debugPrint('[Auth] Register response: ${res.statusCode}');
-      final data = res.data['data'] as Map<String, dynamic>;
-      await _api.saveToken(data['token'] as String);
-      _user = UserModel.fromJson(data['user'] as Map<String, dynamic>);
+      final res = await _supabase.auth.signUp(
+        phone: _normalizePhone(phone),
+        password: pin,
+        data: {'name': name},
+      );
+      debugPrint('[Auth] Register response: user=${res.user?.id}');
+      if (res.user == null || res.session == null) return false;
+      _user = _userFromSupabase(res.user!);
       _isAuthenticated = true;
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString(AppConstants.userKey, jsonEncode(_user!.toJson()));
       debugPrint('[Auth] Register successful: user=${_user?.name}');
       return true;
     } catch (e, stack) {
@@ -86,15 +84,14 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
     try {
       debugPrint('[Auth] Login attempt: phone=$phone');
-      final res = await _api
-          .post('/auth/login', data: {'phone': phone, 'pin': pin});
-      debugPrint('[Auth] Login response: ${res.statusCode}');
-      final data = res.data['data'] as Map<String, dynamic>;
-      await _api.saveToken(data['token'] as String);
-      _user = UserModel.fromJson(data['user'] as Map<String, dynamic>);
+      final res = await _supabase.auth.signInWithPassword(
+        phone: _normalizePhone(phone),
+        password: pin,
+      );
+      debugPrint('[Auth] Login response: user=${res.user?.id}');
+      if (res.user == null) return false;
+      _user = _userFromSupabase(res.user!);
       _isAuthenticated = true;
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString(AppConstants.userKey, jsonEncode(_user!.toJson()));
       debugPrint('[Auth] Login successful: user=${_user?.name}');
       return true;
     } catch (e, stack) {
@@ -108,9 +105,7 @@ class AuthProvider extends ChangeNotifier {
   }
 
   Future<void> logout() async {
-    await _api.clearToken();
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(AppConstants.userKey);
+    await _supabase.auth.signOut();
     _user = null;
     _isAuthenticated = false;
     notifyListeners();

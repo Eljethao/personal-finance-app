@@ -4,7 +4,6 @@ import '../../l10n/app_localizations.dart';
 import '../../providers/auth_provider.dart';
 import '../../utils/app_theme.dart';
 import '../auth/login_screen.dart';
-import '../budgets/budget_screen.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -26,14 +25,6 @@ class SettingsScreen extends StatelessWidget {
           ),
           const Divider(),
           ListTile(
-            leading: const Icon(Icons.account_balance_wallet_outlined),
-            title: Text(l.t('budgets')),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => Navigator.push(context,
-                MaterialPageRoute(builder: (_) => const BudgetScreen())),
-          ),
-          const Divider(),
-          ListTile(
             leading: const Icon(Icons.language),
             title: Text(l.t('language')),
             trailing: DropdownButton<String>(
@@ -45,12 +36,6 @@ class SettingsScreen extends StatelessWidget {
               ],
               onChanged: (v) => auth.setLanguage(v!),
             ),
-          ),
-          SwitchListTile(
-            secondary: const Icon(Icons.fingerprint),
-            title: Text(l.t('biometric')),
-            value: auth.biometricEnabled,
-            onChanged: (v) => auth.setBiometric(v),
           ),
           ListTile(
             leading: const Icon(Icons.pin),

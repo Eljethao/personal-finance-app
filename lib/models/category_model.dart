@@ -16,11 +16,11 @@ class CategoryModel {
   });
 
   factory CategoryModel.fromJson(Map<String, dynamic> json) => CategoryModel(
-        id: json['_id'] ?? json['id'] ?? '',
+        id: json['id'] ?? '',
         name: json['name'] ?? '',
         icon: json['icon'] ?? '',
         color: json['color'] ?? '#4CAF50',
         type: json['type'] ?? 'expense',
-        isDefault: json['isDefault'] ?? false,
+        isDefault: json['is_default'] ?? false,
       );
 }

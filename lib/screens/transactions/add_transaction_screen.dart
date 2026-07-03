@@ -3,17 +3,17 @@ import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import '../../l10n/app_localizations.dart';
 import '../../models/category_model.dart';
-import '../../models/wallet_model.dart';
+import '../../models/transaction_model.dart';
 import '../../providers/category_provider.dart';
 import '../../providers/transaction_provider.dart';
-import '../../providers/wallet_provider.dart';
 import '../../utils/app_theme.dart';
 import '../../utils/formatters.dart';
 import '../../utils/icon_map.dart';
 import '../../utils/slip_parser.dart';
 
 class AddTransactionScreen extends StatefulWidget {
-  const AddTransactionScreen({super.key});
+  final TransactionModel? transaction;
+  const AddTransactionScreen({super.key, this.transaction});
 
   @override
   State<AddTransactionScreen> createState() => _AddTransactionScreenState();
@@ -25,21 +25,31 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   final _noteCtrl = TextEditingController();
   String _type = 'expense';
   CategoryModel? _selectedCategory;
-  WalletModel? _selectedWallet;
   DateTime _selectedDate = DateTime.now();
   String? _slipImagePath;
   bool _isLoading = false;
   bool _isScanning = false;
 
+  bool get _isEditing => widget.transaction != null;
+
   @override
   void initState() {
     super.initState();
-    Future.microtask(() {
+    final t = widget.transaction;
+    if (t != null) {
+      _type = t.type;
+      _amountCtrl.text =
+          ThousandsSeparatorFormatter.format(t.amount.toInt().toString());
+      _noteCtrl.text = t.note ?? '';
+      _selectedDate = t.date;
+    }
+    Future.microtask(() async {
       if (!mounted) return;
       final cp = context.read<CategoryProvider>();
-      if (cp.categories.isEmpty) cp.fetchCategories();
-      final wp = context.read<WalletProvider>();
-      if (wp.wallets.isEmpty) wp.fetchWallets();
+      if (cp.categories.isEmpty) await cp.fetchCategories();
+      if (!mounted || t == null) return;
+      final match = cp.categories.where((c) => c.id == t.categoryId).firstOrNull;
+      if (match != null) setState(() => _selectedCategory = match);
     });
   }
 
@@ -216,12 +226,6 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
           .showSnackBar(SnackBar(content: Text(l.t('selectCategory'))));
       return;
     }
-    if (_selectedWallet == null) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(l.t('selectWallet'))));
-      return;
-    }
-
     setState(() => _isLoading = true);
     final txProvider = context.read<TransactionProvider>();
 
@@ -234,13 +238,14 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       'type': _type,
       'amount': double.parse(_amountCtrl.text.replaceAll(',', '')),
       'categoryId': _selectedCategory!.id,
-      'walletId': _selectedWallet!.id,
       'date': _selectedDate.toIso8601String(),
       if (_noteCtrl.text.isNotEmpty) 'note': _noteCtrl.text,
       if (slipUrl != null) 'slipImageUrl': slipUrl,
     };
 
-    final success = await txProvider.createTransaction(data);
+    final success = _isEditing
+        ? await txProvider.updateTransaction(widget.transaction!.id, data)
+        : await txProvider.createTransaction(data);
 
     setState(() => _isLoading = false);
     if (success && mounted) {
@@ -254,13 +259,13 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
-    final wallets = context.watch<WalletProvider>().wallets;
     final allCategories = context.watch<CategoryProvider>().categories;
     final categoriesForType =
         allCategories.where((c) => c.type == _type).toList();
 
     return Scaffold(
-      appBar: AppBar(title: Text(l.t('addTransaction'))),
+      appBar: AppBar(
+          title: Text(_isEditing ? l.t('editTransaction') : l.t('addTransaction'))),
       body: GestureDetector(
         onTap: () => FocusScope.of(context).unfocus(),
         behavior: HitTestBehavior.opaque,
@@ -376,21 +381,6 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                 onChanged: (v) => setState(() => _selectedCategory = v),
                 validator: (v) =>
                     v == null ? l.t('selectCategory') : null,
-              ),
-              const SizedBox(height: 16),
-              DropdownButtonFormField<WalletModel>(
-                value: _selectedWallet,
-                decoration: InputDecoration(
-                    labelText: l.t('wallet'),
-                    prefixIcon: const Icon(
-                        Icons.account_balance_wallet_outlined)),
-                items: wallets
-                    .map((w) =>
-                        DropdownMenuItem(value: w, child: Text(w.name)))
-                    .toList(),
-                onChanged: (v) => setState(() => _selectedWallet = v),
-                validator: (v) =>
-                    v == null ? l.t('selectWallet') : null,
               ),
               const SizedBox(height: 8),
               ListTile(
